@@ -110,6 +110,7 @@ class RossmannToolbox:
         :return: dictionary with extracted Rossmann sequences
         """
         
+
         # Check for undetected cores
         detected_ids = {key for key, value in detected_cores.items() if len(value) > 0}
         passed_ids = set(data.keys())
