@@ -293,10 +293,10 @@ class RossmannToolbox:
         for chain in pdb_chains:
             if chain is None:
                 raise ChainNotFound('chain %s not found in: %s ' %(chain, path))
-                                    
-            path_pdb_file = os.path.join(self.struct_utils.path, chain) + self.struct_utils.foldx_suffix
-            chain_struct = atomium.open(path_pdb_file).model
-            print(chain_struct)
+            _, chain_id = chain.split('_')                      
+            path_pdb_file = os.path.join(self.struct_utils.path, chain) + '.pdb'
+            chain_struct = atomium.open(path_pdb_file)
+            chain_struct = chain_struct.model.chain(chain_id)
             pdb_res = [res for res in chain_struct.residues() if seq1(res.name)!='X']
             pdbids = [res.id.split('.')[1] for res in pdb_res]
             pdbseq = "".join([seq1(res.name) for res in pdb_res]) 
@@ -311,14 +311,14 @@ class RossmannToolbox:
                 if core_pos == -1:
                     print('could not map the core onto the sequence')
                 pdb_list = pdbids[core_pos:core_pos+len(core_seq)]
-                raw_ss = extract_core_dssp(foldx_file, pdb_list, core_seq)
+                raw_ss = extract_core_dssp(path_pdb_file, pdb_list, core_seq)
                 extended_ss = separate_beta_helix(raw_ss)
 
                 frame_list.append({
                     'pdb_chain' : pdb_chain,
                     'seq' : core_seq,
                     'pdb_list' : pdb_list,
-                    'fname' : struct_file,
+                    'fname' : path_pdb_file.replace('.pdb', self.struct_utils.foldx_suffix),
                     'secondary' : extended_ss
                 })
         frame = pd.DataFrame(frame_list)
@@ -372,15 +372,20 @@ class RossmannToolbox:
         
         if not os.path.isdir(path_pdb):
             raise NotADirectoryError(f'given path_pdb: {path_pdb} is not a directory')
-            
+        
+        if chain_list is None:
+            chain_list = os.listdir(path_pdb)
+            #uses only those files with format XXXX_Y.pdb where XXXX is protein id and Y is a chain
+            chain_list = [f.replace('.pdb', '') for f in chain_list if f.endswith('.pdb')]
+            chain_list = [f for f in chain_list if len(f) == 6]
         feats = self.struct_evaluate_cores(path_pdb, chain_list)
         results = self.dl3d.predict(**feats)
-        return results
+        return results.to_dict(orient='records')
         
         
 class StructPrep:
     foldx_suffix = '_Repair.pdb'
-    foldx_feat_suffix = '_Repair.fxout'
+    foldx_feat_suffix = '_Repair_PN.fxout'
     rotabase  = 'rotabase.txt'
     def __init__(self, path, path_foldx_bin):
         """

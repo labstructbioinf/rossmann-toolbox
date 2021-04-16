@@ -4,7 +4,7 @@ import subprocess
 import atomium
 sys.path.append(__file__)
 from solveX import solveX
-from dssp import get_dssp_seq, parse_dssp_output
+from dssp import get_dssp_seq, parse_dssp_output, run_dssp
 
 def run_command(cmd):
 	proc = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
