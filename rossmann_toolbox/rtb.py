@@ -6,6 +6,7 @@ import torch
 import atomium
 import numpy as np
 import pandas as pd
+from Bio.SeqUtils import seq1
 
 from zipfile import ZipFile
 from rossmann_toolbox.utils import sharpen_preds, corr_seq, custom_warning
@@ -20,7 +21,7 @@ from rossmann_toolbox.utils import MyFoldX, fix_TER
 from rossmann_toolbox.utils import separate_beta_helix
 from rossmann_toolbox.utils.tools import run_command, extract_core_dssp
 from rossmann_toolbox.utils import Deepligand3D
-
+from rossmann_toolbox.utils.graph_feat_prep import feats_from_stuct_file
 warnings.showwarning = custom_warning
 
 
@@ -295,7 +296,7 @@ class RossmannToolbox:
                                     
             path_pdb_file = os.path.join(self.struct_utils.path, chain) + self.struct_utils.foldx_suffix
             chain_struct = atomium.open(path_pdb_file).model
-            print(chain_struct.residues())
+            print(chain_struct)
             pdb_res = [res for res in chain_struct.residues() if seq1(res.name)!='X']
             pdbids = [res.id.split('.')[1] for res in pdb_res]
             pdbseq = "".join([seq1(res.name) for res in pdb_res]) 
