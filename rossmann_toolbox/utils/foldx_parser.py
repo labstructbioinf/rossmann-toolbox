@@ -176,7 +176,7 @@ class foldx_details_parser():
 			f_name = f'{path}/InteractingResidues_{dt}_Optimized_{pdb_chain}_Repair{model_idx}_PN.fxout'
 			edge_res[dt] = self.__parse(f_name)
 	
-		node_res = pd.read_csv(f'{data_dir}/SD_Optimized_{pdb_chain}_Repair{model_idx}.fxout', 
+		node_res = pd.read_csv(f'{path}/SD_Optimized_{pdb_chain}_Repair{model_idx}.fxout', 
 							  sep='\t', names=cols, dtype={'pdb_seq_num':str, })
 
 		tmp=len(node_res)

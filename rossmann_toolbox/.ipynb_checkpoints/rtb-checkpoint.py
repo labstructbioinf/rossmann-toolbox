@@ -1,6 +1,9 @@
-import warnings
-import torch
 import os
+import shutil
+import warnings
+
+import torch
+import atomium
 import numpy as np
 import pandas as pd
 
@@ -13,15 +16,21 @@ from rossmann_toolbox.models import SeqCoreEvaluator, SeqCoreDetector
 from conditional import conditional
 from captum.attr import IntegratedGradients
 
+from rossmann_toolbox.utils import MyFoldX, fix_TER
+from rossmann_toolbox.utils import separate_beta_helix
+from rossmann_toolbox.utils.tools import run_command, extract_core_dssp
+from rossmann_toolbox.utils import Deepligand3D
+
 warnings.showwarning = custom_warning
 
 
 class RossmannToolbox:
-
-    def __init__(self, use_gpu=True):
+    struct_utils = None
+    def __init__(self, use_gpu=True, path_foldx_bin=None):
         """
         Rossmann Toolbox - A framework for predicting and engineering the cofactor specificity of Rossmann-fold proteins
         :param use_gpu: Use GPU to speed up predictions
+        :param path_foldx_bin: optional absolute path to foldx binary file needed for structural based predictions
         """
         self.label_dict = {'FAD': 0, 'NAD': 1, 'NADP': 2, 'SAM': 3}
         self.rev_label_dict = {value: key for key, value in self.label_dict.items()}
@@ -40,6 +49,10 @@ class RossmannToolbox:
         self._path = os.path.dirname(os.path.abspath(__file__))
         self._seqvec = self._setup_seqvec()
         self._weights_prefix = f'{self._path}/weights/'
+        self._path_foldx_bin = path_foldx_bin
+        
+        if self._path_foldx_bin is not None:
+            self.dl3d = self._setup_dl3d()
 
     def _process_input(self, data, full_length=False):
         """
@@ -102,6 +115,18 @@ class RossmannToolbox:
         else:
             return SeqVec(model_dir=f'{seqvec_dir}/uniref50_v2', cuda_device=-1, tokens_per_batch=8000)
         
+        
+    def _setup_dl3d(self):
+        """
+        Load DL3D model to either GPU or CPU
+        :return: structural graph predictor instance
+        """
+        weights_dir = f'{self._path}/weights/struct_ensamble'
+        weights_list_fn = [f'{weights_dir}/model{i}.ckpt' for i in range(1, 5)]
+        device_type = 'cuda' if self.use_gpu else 'cpu'
+        
+        return Deepligand3D(weights_list_fn, device_type)
+        
     def _get_cores_from_seq(self, data, detected_cores):
         """
         Parses output of `seq_detect_cores` to dictionary with core sequences
@@ -110,7 +135,6 @@ class RossmannToolbox:
         :return: dictionary with extracted Rossmann sequences
         """
         
-
         # Check for undetected cores
         detected_ids = {key for key, value in detected_cores.items() if len(value) > 0}
         passed_ids = set(data.keys())
@@ -240,10 +264,76 @@ class RossmannToolbox:
                      for key, value in gen.indices.items()}
             return results, attrs
         return results
+    
+    def _prepare_struct_files(self, pdb_chains):
+        """
+        creates all files needed for futher calculations
+        :param pdb_chains: list of chains
+        """
 
-    def struct_evaluate_cores(self):
-        raise NotImplementedError('TODO')
+        #checks if raw struct file exists
+        for chain in pdb_chains:
+            if not self.struct_utils.is_structure_file_cached(chain):
+                self.struct_utils.download_pdb_chain(chain)
+        #checks if foldx struct file exists 
+        for chain in pdb_chains:
+            if not self.struct_utils.is_foldx_file_cached(chain):
+                self.struct_utils.repair_pdb_chain(chain)
+        #checks if foldx feat files exists 
+        for chain in pdb_chains:
+            if not self.struct_utils.is_foldx_feat_file_cached(chain):
+                self.struct_utils.calc_struct_feats(chain)        
+        
+    def _prepare_struct_feats(self, pdb_chains):
+        
+        if self.struct_utils is None:
+            raise RuntimeError(' structural utilities are not initialized properly')
+            
+        for chain in pdb_chains:
+            if chain is None:
+                raise ChainNotFound('chain %s not found in: %s ' %(chain, path))
+                                    
+            path_pdb_file = os.path.join(self.struct_utils.path, chain) + self.struct_utils.foldx_suffix
+            chain_struct = atomium.open(path_pdb_file).model
+            print(chain_struct.residues())
+            pdb_res = [res for res in chain_struct.residues() if seq1(res.name)!='X']
+            pdbids = [res.id.split('.')[1] for res in pdb_res]
+            pdbseq = "".join([seq1(res.name) for res in pdb_res]) 
 
+            # find core
+            data = {chain: pdbseq}
+            detected_cores = self.seq_detect_cores(data)
+            filtred_cores = self._get_cores_from_seq(data, detected_cores)
+            frame_list = list()
+            for pdb_chain, core_seq in filtred_cores.items():
+                core_pos = pdbseq.find(core_seq)
+                if core_pos == -1:
+                    print('could not map the core onto the sequence')
+                pdb_list = pdbids[core_pos:core_pos+len(core_seq)]
+                raw_ss = extract_core_dssp(foldx_file, pdb_list, core_seq)
+                extended_ss = separate_beta_helix(raw_ss)
+
+                frame_list.append({
+                    'pdb_chain' : pdb_chain,
+                    'seq' : core_seq,
+                    'pdb_list' : pdb_list,
+                    'fname' : struct_file,
+                    'secondary' : extended_ss
+                })
+        frame = pd.DataFrame(frame_list)
+        foldx_info, distances_dict, edge_dict = feats_from_stuct_file(frame)      
+        return {'dataframe' : frame,
+                'contact_maps' : distances_dict,
+                'edge_feats'  : edge_dict,
+                'foldx_info' : foldx_info}
+                                    
+    def struct_evaluate_cores(self, path, chain_list):
+                                    
+        self.struct_utils = StructPrep(path, self._path_foldx_bin)
+        self._prepare_struct_files(chain_list)
+        data = self._prepare_struct_feats(chain_list)                                    
+        return data                     
+                                    
     def predict(self, data, mode = 'core', importance = False):
         """
         Evaluate cofactor specificity of full-length or Rossmann-core sequences.
@@ -269,7 +359,117 @@ class RossmannToolbox:
                 predictions[key]['sequence'] = data[key]
         return predictions
 
+    def predict_structure(self, path_pdb='tests/data', chain_list=None):
+        """
+        structure-based prediction
+        :param path_pdb: path to directory with pdb structures & foldx data
+        :param chain_list: list of chains used in predictions, if chain is not available it will be downloaded
+        """
+        
+        if self._path_foldx_bin is None:
+            raise RuntimeError('foldx binary location is not specified re-run `RossmannToolbox` with `path_foldx_bin`')
+        
+        if not os.path.isdir(path_pdb):
+            raise NotADirectoryError(f'given path_pdb: {path_pdb} is not a directory')
+            
+        feats = self.struct_evaluate_cores(path_pdb, chain_list)
+        results = self.dl3d.predict(**feats)
+        return results
+        
+        
+class StructPrep:
+    foldx_suffix = '_Repair.pdb'
+    foldx_feat_suffix = '_Repair.fxout'
+    rotabase  = 'rotabase.txt'
+    def __init__(self, path, path_foldx_bin):
+        """
+        structure preparation flow for node and edge features extraction
+        """
+        self.path = path
+        self.path_foldx_bin = path_foldx_bin
+        self.path_foldx = os.path.dirname(path_foldx_bin)
+        if not os.path.isfile(self.path_foldx_bin):
+            raise FileNotFoundError('foldx binary not found in', self.path_foldx_bin)
+        self._read_cache()
+        if 'rotabase.txt' not in self.files:
+            shutil.copyfile(os.path.join(self.path_foldx, self.rotabase), os.path.join(self.path, self.rotabase))
 
-    def predict_structure(self):
-        # TODO implement structure-based prediction
-        raise NotImplementedError('TODO')
+    def download_pdb_chain(self, pdb_chain):
+        """
+        downloads certain protein chain via atomium library
+        :params: pdb_chain - wothout .pdb extension
+        """
+        path_dest = os.path.join(self.path, pdb_chain)
+        struc_id, chain = pdb_chain.split('_')
+        temp = atomium.fetch(struc_id.upper())
+        temp.model.chain(chain.upper()).save(path_dest + '.pdb')
+    
+    def repair_pdb_chain(self, pdb_chain):
+        """
+        repairs pdb file with foldx `RepairPDB` command
+        """
+        print('preparing foldx structure file...')
+        pdb_chain = pdb_chain + '.pdb' if not pdb_chain.endswith('.pdb') else pdb_chain
+        work_dir = os.getcwd()
+        #change working directory to `PATH_CACHED_STRUCTURES` without that
+        #foldx cant find structure error `No pdbs for the run found at: "./" Foldx will end`
+        os.chdir(self.path)
+        cmd = f'{self.path_foldx_bin} --command=RepairPDB --pdb={pdb_chain}'
+        out = run_command(cmd)
+        fix_TER(pdb_chain)
+        os.chdir(work_dir)
+        
+    def calc_struct_feats(self, pdb_chain):
+        
+        print('creating foldx feature file...')
+        # calculate structural features using foldX 
+        # it always calc features - probably some kind of file name error TODO
+        fx = MyFoldX(self.path, self.path, self.path_foldx_bin)
+        fx._MyFoldX__calc_foldx_features(self.path, pdb_chain + self.foldx_suffix)
+        
+    def _read_cache(self):
+        """
+        read content of `path` variable
+        """
+        if not os.path.isdir(self.path):
+            raise NotADirectoryError(f'structure dir :{self.path}')
+        
+        self.files = os.listdir(self.path)
+        self.files_struct = [f for f in self.files if f.find(self.foldx_suffix) == -1]
+        self.files_foldx = [f for f in self.files if f.find(self.foldx_suffix) != -1]
+        self.files_foldx_feats = [f for f in self.files if f.find(self.foldx_feat_suffix) != -1]
+          
+    def is_structure_file_cached(self, file_pdb):
+
+        condition = False
+        file_pdb = file_pdb + '.pdb' if not file_pdb.endswith('.pdb') else file_pdb
+        path_file_full = os.path.join(self.path, file_pdb)
+        if file_pdb in self.files_struct:
+            if os.path.getsize(path_file_full) > 0:
+                condition = True
+        return condition
+    
+    def is_foldx_feat_file_cached(self, file_pdb):
+        
+        condition = False
+        file_pdb = file_pdb + self.foldx_feat_suffix if not file_pdb.endswith(self.foldx_feat_suffix) else file_pdb
+        path_file_full = os.path.join(self.path, file_pdb)
+        if file_pdb in self.files_foldx_feats:
+            if os.path.getsize(path_file_full) > 0:
+                condition = True
+        return condition
+    
+    def is_foldx_file_cached(self, file_pdb):
+
+        condition = False
+        file_pdb = file_pdb + self.foldx_suffix if not file_pdb.endswith(self.foldx_suffix) else file_pdb
+        path_file_full = os.path.join(self.path, file_pdb)
+        if file_pdb in self.files_foldx:
+            if os.path.getsize(path_file_full) > 0:
+                condition = True
+        return condition
+        
+
+        
+        
+        

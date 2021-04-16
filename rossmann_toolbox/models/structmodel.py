@@ -70,8 +70,8 @@ class GAT(nn.Module):
         # hidden sizes
         self.emb_size = 21#15
         self.emb2_size = 12#7
-        self.dict_size = params.NUM_RES_LETTERS
-        self.dict_size2 = params.NUM_SS_LETTERS
+        self.dict_size = 21
+        self.dict_size2 = 11
         self.in_dim =  self.emb_size + self.emb2_size + self.in_dim_n
         
         

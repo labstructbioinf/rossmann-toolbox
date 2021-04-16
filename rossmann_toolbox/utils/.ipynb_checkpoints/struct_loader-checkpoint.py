@@ -10,10 +10,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 
-sys.path.append('/home/users/kkaminski/DL/rossmann-toolbox/rossmann_toolbox')
-sys.path.append(__file__)
-from models import GatLit
-#from .bio_params import * as params
+from ..models import GatLit
+from .graph_loader_opt import GraphECMLoaderBalanced
 
 
 def collate(samples):
@@ -32,6 +30,8 @@ def sigmoid(x):
 class Deepligand3D:
     COFACTORS = ['NAD', 'NADP', 'SAM', 'FAD']
     NUM_WORKERS = 4
+    LABEL_DICT = {'NAD' : 0, 'NADP' : 1, 'SAM' : 2,  'FAD' : 3}
+    LABEL_DICT_R = {0 :'NAD', 1 :'NADP', 2 :'SAM',  3:'FAD' }
     def __init__(self, list_of_model_paths, device='cpu', **kw_args):
         '''
         Monte carlo Deepligand version
@@ -146,8 +146,8 @@ class Deepligand3D:
     def __number_to_class(self, values):
         classes = []
         for v in values:
-            if v in params.LABEL_DICT_R.keys():
-                classes.append(params.LABEL_DICT_R[v])
+            if v in self.LABEL_DICT_R.keys():
+                classes.append(self.LABEL_DICT_R[v])
             else:
                 classes.append('unknown')
         classes = np.asarray(classes)
