@@ -1,11 +1,13 @@
 import os
 import shutil
 import warnings
-
+import subprocess
 import torch
 import atomium
+import tempfile
 import numpy as np
 import pandas as pd
+import concurrent.futures
 from Bio.SeqUtils import seq1
 
 from zipfile import ZipFile
@@ -22,21 +24,25 @@ from rossmann_toolbox.utils import separate_beta_helix
 from rossmann_toolbox.utils.tools import run_command, extract_core_dssp
 from rossmann_toolbox.utils import Deepligand3D
 from rossmann_toolbox.utils.graph_feat_prep import feats_from_stuct_file
+from csb.bio.io.hhpred import HHOutputParser
 warnings.showwarning = custom_warning
 
 
 class RossmannToolbox:
     struct_utils = None
-    def __init__(self, use_gpu=True, path_foldx_bin=None):
+    def __init__(self, n_cpu = -1, use_gpu=True, path_foldx_bin=None, hhsearch_loc=None):
         """
         Rossmann Toolbox - A framework for predicting and engineering the cofactor specificity of Rossmann-fold proteins
+        :param n_cpu: Number of CPU cores to use in the CPU-dependent calculations. n_cpu=-1 will use all available cores
         :param use_gpu: Use GPU to speed up predictions
         :param path_foldx_bin: optional absolute path to foldx binary file needed for structural based predictions
+        :param hhsearch_loc: Location of hhsearch binary (v3.* required) for hhsearch-enabled Rossmann core detection
         """
         self.label_dict = {'FAD': 0, 'NAD': 1, 'NADP': 2, 'SAM': 3}
         self.rev_label_dict = {value: key for key, value in self.label_dict.items()}
         self.n_classes = 4
 
+        self.n_cpu = n_cpu if n_cpu != -1 else os.cpu_count()
         # Handle GPU config
         self.use_gpu = False
         self.device = torch.device('cpu')
@@ -54,6 +60,57 @@ class RossmannToolbox:
         
         if self._path_foldx_bin is not None:
             self.dl3d = self._setup_dl3d()
+
+        self.hhsearch_loc = hhsearch_loc
+        if self.hhsearch_loc is not None:
+            if not self._check_hhsearch():
+                raise ValueError(
+                    'HHsearch v3 binary not detected in the specified location: \'{}\''.format(self.hhblits_loc))
+
+    def _check_hhsearch(self):
+        try:
+            output = subprocess.check_output(self.hhsearch_loc, universal_newlines=True)
+        except subprocess.CalledProcessError as e:
+            output = e.output
+        except (FileNotFoundError, PermissionError):
+            return False
+        return output.split('\n')[0].startswith('HHsearch 3')
+
+    def _run_hhsearch(self, sequence, min_prob=0.5):
+        temp = tempfile.NamedTemporaryFile(mode='w+t')
+        temp.writelines(">seq\n{}\n".format(sequence))
+        temp.seek(0)
+        fn = temp.name
+        cmd = f'{self.hhsearch_loc} -i {fn} -d {self._path}/utils/hhdb/core -n 1'
+        result = subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        temp.close()
+        if result == 0:
+            out_fn = f'{fn}.hhr'
+            parser = HHOutputParser()
+            hits = {i: (hit.qstart, hit.qend, hit.probability) for i, hit in
+                    enumerate(parser.parse_file(out_fn)) if hit.probability >= min_prob}
+            os.remove(out_fn)
+
+            # Choose highest prob hit from overlapping hits
+            hits_nr = {}
+            for (beg, end, prob) in hits.values():
+                found_overlap = False
+                res_set = {i for i in range(beg, end + 1)}
+                for key, hit in hits_nr.items():
+                    hit_set = {i for i in range(hit[0], hit[1] + 1)}
+                    if len(hit_set & res_set) >= 0:
+                        if prob > hit[2]:
+                            hits_nr[key] = (beg, end, prob)
+                        found_overlap = True
+                        break
+                if not found_overlap:
+                    hits_nr[len(hits_nr)] = (beg, end, prob)
+            probs = [0]*len(sequence)
+            for (beg, end, prob) in hits_nr.values():
+                for i in range(beg, end+1):
+                    probs[i] = prob
+            return hits_nr, probs
+        return {}, ()
 
     def _process_input(self, data, full_length=False):
         """
@@ -116,7 +173,6 @@ class RossmannToolbox:
         else:
             return SeqVec(model_dir=f'{seqvec_dir}/uniref50_v2', cuda_device=-1, tokens_per_batch=8000)
         
-        
     def _setup_dl3d(self):
         """
         Load DL3D model to either GPU or CPU
@@ -157,24 +213,7 @@ class RossmannToolbox:
     def _setup_seq_core_detector(self):
         return SeqCoreDetector().to(self.device)
 
-    def _setup_seq_core_evaluator(self):
-        return SeqCoreEvaluator().to(self.device)
-
-    def _setup_struct_core_evaluator(self):
-        raise NotImplementedError('TODO')
-
-    def seq_detect_cores(self, data, return_probs = False):
-        """
-        Detects Rossmann beta-alpha-beta cores in full-length protein sequences.
-        :param data: Input data - a dictionary with ids and corresponding sequences as keys and values
-        :param return_probs: return additional per-residue probabilities (True/False)
-        :return: dictionary with ids and detected core locations as keys and values. If return_probs is True the values
-        of the returned dict are (detected cores, probability profile).
-        """
-
-        data = self._process_input(data, full_length=True)
-
-        # Prepare embeddings and models
+    def _run_seq_core_detector(self, data):
         embeddings = self._seqvec.encode(data, to_file=False)
         seqvec_enc = SeqVecMemEncoder(embeddings, pad_length=500)
         gen = SeqChunker(data, batch_size=64, W_size=500, shuffle=False,
@@ -195,10 +234,30 @@ class RossmannToolbox:
         preds = np.vstack(preds)
         preds_depadded = {key: np.concatenate([preds[ix][ind[0]:ind[1]] for ix, ind in zip(*value)]) for key, value
                           in gen.indices.items()}
-        if return_probs:
-            return {key: (sharpen_preds(value), value) for key, value in preds_depadded.items()}
-        else:
-            return {key: sharpen_preds(value) for key, value in preds_depadded.items()}
+        return {key: (sharpen_preds(value), value) for key, value in preds_depadded.items()}
+
+    def _setup_seq_core_evaluator(self):
+        return SeqCoreEvaluator().to(self.device)
+
+    def seq_detect_cores(self, data, mode='dl'):
+        """
+        Detects Rossmann beta-alpha-beta cores in full-length protein sequences.
+        :param data: Input data - a dictionary with ids and corresponding sequences as keys and values
+        :param mode: Mode of Rossmann core detection - either 'hhsearch' or 'dl'.
+        :return: dictionary with ids and detected core locations as keys and values and per residue probabilities.
+        """
+        data = self._process_input(data, full_length=True)
+
+        if mode == 'hhsearch':
+            executor_ = concurrent.futures.ThreadPoolExecutor(max_workers=self.n_cpu)
+            with executor_ as executor:
+                futures = {executor.submit(self._run_hhsearch, sequence): key for key, sequence in
+                           data['sequence'].to_dict().items()}
+                cores = {futures[future]: future.result() for future in concurrent.futures.as_completed(futures)}
+            return cores
+        elif mode == 'dl':
+            cores = self._run_seq_core_detector(data)
+            return cores
 
     def seq_evaluate_cores(self, data, importance = False):
         """
@@ -335,11 +394,12 @@ class RossmannToolbox:
         data = self._prepare_struct_feats(chain_list)                                    
         return data                     
                                     
-    def predict(self, data, mode = 'core', importance = False):
+    def predict(self, data, mode = 'core', core_detect_mode = 'dl', importance = False):
         """
         Evaluate cofactor specificity of full-length or Rossmann-core sequences.
         :param data: Input data - a dictionary with ids and corresponding sequences as keys and values
         :param mode: Prediction mode - either 'seq' for full-sequence input or 'core' for Rossmann-core sequences
+        :param core_detect_mode: Mode of Rossmann core detection. Either 'hhsearch' or 'dl'. Works only in the 'seq' mode.
         :param importance: Return additional per-residue importances, i.e. contributions to the final
         specificity predictions
         :return: Dictionary with the sequence ids and per-sequence predictions of the cofactor specificties.
@@ -349,11 +409,30 @@ class RossmannToolbox:
         """
         if mode not in ['seq', 'core']:
             raise ValueError('Prediction mode must be either \'seq\' or \'core\'!')
+        if core_detect_mode not in ['hhsearch', 'dl']:
+            raise ValueError('Core dection mode must be either \'hhblits\' or \'dl\'!')
 
         # Full length sequence input
         if mode == 'seq':
-            detected_cores = self.seq_detect_cores(data)
-            data = self._get_cores_from_seq(data, detected_cores)
+            detected_cores = self.seq_detect_cores(data, mode=core_detect_mode)
+
+            # Check for undetected cores
+            detected_ids = {key for key, value in detected_cores.items() if len(value) > 0}
+            passed_ids = set(data.keys())
+            if len(set(detected_ids)) != len(set(passed_ids)):
+                missing_ids = set(passed_ids) - set(detected_ids)
+                warnings.warn('Rossmann cores were not detected for ids: {}'.format(', '.join(missing_ids)))
+
+            # Check for multiple cores in one sequence
+            multiple_hits_ids = {str(key) for key, value in detected_cores.items() if len(value[0]) > 1}
+            if len(multiple_hits_ids) > 0:
+                warnings.warn(
+                    'Found multiple Rossmann cores for ids: \'{}\'. Passing first hit for further predictions'.format(
+                        ', '.join(multiple_hits_ids)))
+            cores_filtered = {key: data[key][value[0][0][0]:value[0][0][1]] for key, value in detected_cores.items() if
+                              len(value[0]) > 0}
+            data = cores_filtered
+
         predictions = self.seq_evaluate_cores(data, importance=importance)
         if mode == 'seq':
             for key in predictions.keys():

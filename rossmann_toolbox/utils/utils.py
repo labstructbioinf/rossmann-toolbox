@@ -48,10 +48,6 @@ def sharpen_preds(probs, sep=15, min_prob=0.5):
     merged_peak_dict = {i: (peak_dict[mp[0]][0], peak_dict[mp[-1]][1], max([peak_dict[idx][2] for idx in mp]))
                         for i, mp in enumerate(merged_peaks)}
     return merged_peak_dict
-    sharp_probs = np.zeros(len(probs))
-    for (beg, end, prob) in merged_peak_dict.values():
-        sharp_probs[beg:end] = prob
-    return sharp_probs
 
 def corr_seq(seq):
     """

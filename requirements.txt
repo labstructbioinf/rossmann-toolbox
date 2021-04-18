@@ -3,3 +3,4 @@ biopython>=1.7
 pandas>=1.0
 captum==0.3.1
 conditional==1.3
+csb==1.2.5
