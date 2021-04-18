@@ -12,9 +12,9 @@ from Bio.PDB.vectors import Vector
 from scipy.spatial import distance_matrix
 import dgl
 
-sys.path.append('/home/users/kkaminski/DL/rossmann-toolbox/rossmann_toolbox/utils')
-import bio_params as params
-import foldx_parser as foldx
+#sys.path.append('/home/users/kkaminski/DL/rossmann-toolbox/rossmann_toolbox/utils')
+#import bio_params as params
+#import foldx_parser as foldx
 
 def generate_Cb(residue):
     '''

@@ -16,7 +16,7 @@
 
 import os, glob
 from Bio.Data.IUPACData import protein_letters_3to1
-import tools
+#import tools
 import pandas as pd
 
 
