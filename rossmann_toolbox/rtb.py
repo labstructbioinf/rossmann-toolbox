@@ -403,7 +403,7 @@ class RossmannToolbox:
         :param importance: Return additional per-residue importances, i.e. contributions to the final
         specificity predictions
         :return: Dictionary with the sequence ids and per-sequence predictions of the cofactor specificties.
-        If importance is True each dictionary value will contain additional per-residue importances.
+        If importance is True will return additional dictionary with per-residue importances for each entry.
         If mode is 'seq' output will additionally contain the 'sequence' keys for each input id indicating the detected
         Rossmann core sequence.
         """
@@ -432,12 +432,18 @@ class RossmannToolbox:
             cores_filtered = {key: data[key][value[0][0][0]:value[0][0][1]] for key, value in detected_cores.items() if
                               len(value[0]) > 0}
             data = cores_filtered
-
-        predictions = self.seq_evaluate_cores(data, importance=importance)
+        if importance:
+            predictions, attrs = self.seq_evaluate_cores(data, importance=importance)
+        else:
+            predictions = self.seq_evaluate_cores(data, importance=importance)
         if mode == 'seq':
             for key in predictions.keys():
                 predictions[key]['sequence'] = data[key]
-        return predictions
+        
+        if importance:
+            return predictions, attrs
+        else:
+            return predictions
 
     def predict_structure(self, path_pdb='tests/data', chain_list=None):
         """
