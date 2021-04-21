@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 
 from Bio.SeqUtils import seq1
-from struct_model_hparams import hparams
+from .struct_model_hparams import hparams
 
 cols="""Pdb
 three_letter

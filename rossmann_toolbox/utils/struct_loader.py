@@ -58,7 +58,7 @@ class Deepligand3D:
             self.model_list.append(
                 GatLit.load_from_checkpoint(path).eval().to(self.device)
             )
-        print(f'loaded {len(self.model_list)} models')
+        print(f'Loaded {len(self.model_list)} structure-based prediction models.')
 
     def predict(self, dataframe, contact_maps, edge_feats, foldx_info, raw_scores = False, verbose=False):
         '''
@@ -79,7 +79,8 @@ class Deepligand3D:
         if verbose and (len(available_sequences) == 0):
             raise ValueError('mismatched keys')
         else:
-            print('seq to process:', len(available_sequences), num_sequences)
+            pass
+            #print('seq to process:', len(available_sequences), num_sequences)
         indices_with_embeddings = [i for i, seq in enumerate(indices) if seq in available_sequences]
         mask_with_embeddings = [True if idx in indices_with_embeddings else False for idx in indices]
         sequences_without_embeddings = set(indices) - available_sequences

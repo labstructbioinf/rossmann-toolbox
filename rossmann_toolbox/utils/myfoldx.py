@@ -16,8 +16,8 @@
 
 import os, glob
 from Bio.Data.IUPACData import protein_letters_3to1
-#import tools
 import pandas as pd
+from .tools import run_command, extract_core, extract_core_dssp
 
 
 def fix_TER(pdb_file):
@@ -158,17 +158,17 @@ class MyFoldX():
 		res2 = os.path.join(location, f'InteractingResidues_Hbonds_Optimized_{repaired_pdb.replace(".pdb", "")}_PN.fxout')
 				
 		if not os.path.isfile(res1) or not os.path.isfile(res2):	
-			print('Calculating FoldX features...')	
+			print(f'Calculating FoldX features for {repaired_pdb}...')	
 			os.chdir(location)
 			cmd = f'{self.foldx_path} --command=Optimize --pdb={repaired_pdb}'
-			tools.run_command(cmd)
+			run_command(cmd)
 			cmd = f'{self.foldx_path} --command=SequenceDetail --pdb=Optimized_{repaired_pdb}'
-			tools.run_command(cmd)
+			run_command(cmd)
 			cmd = f'{self.foldx_path} --command=PrintNetworks --pdb=Optimized_{repaired_pdb}'
-			tools.run_command(cmd)		
+			run_command(cmd)		
 			os.chdir(work_dir)
 		else:
-			print('FoldX features read from cache...')
+			print(f'FoldX features for {repaired_pdb} read from cache...')
 					
 	def add_foldx_features(self, mutations_df):
 		for idx, mut in mutations_df.iterrows():

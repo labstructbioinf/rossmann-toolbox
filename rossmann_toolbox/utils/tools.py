@@ -3,8 +3,8 @@ import subprocess
 
 import atomium
 sys.path.append(__file__)
-#from solveX import solveX
-#from dssp import get_dssp_seq, parse_dssp_output, run_dssp
+from .solveX import solveX
+from .dssp import get_dssp_seq, parse_dssp_output, run_dssp
 
 def run_command(cmd):
 	proc = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
@@ -22,8 +22,6 @@ def add_wt_pdb_list(wt_seq, wt_pdb_list):
         else:
             new_wt_pdb_list.append(None)
     return new_wt_pdb_list
-
-
 
 def generate_mutations(mutations_df, insertions=True):
 	"""
@@ -72,7 +70,7 @@ def extract_core(pdb_path, chain, pdb_list, expected_seq):
 	
 	# check	
 	core_seq = "".join([mymodel.residue(i).code for i in sel_res])
-	tmp=solveX.solveX(core_seq, expected_seq)
+	tmp=solveX(core_seq, expected_seq)
 	assert tmp[1] == expected_seq, f'failed to save the core from {pdb_path}\n{core_seq}\n{expected_seq}'
 	return out_file_name
 	
