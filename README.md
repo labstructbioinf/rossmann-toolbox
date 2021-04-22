@@ -1,5 +1,5 @@
 # Rossmann Toolbox
-
+![just a logo](https://github.com/labstructbioinf/rossmann-toolbox/blob/main/logo.png?raw=true)
 
 ## Cookbook
 ### Init
