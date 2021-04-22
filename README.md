@@ -1,13 +1,12 @@
-# Rossmann Toolbox
-![just a logo](https://github.com/labstructbioinf/rossmann-toolbox/blob/main/logo.png?raw=true)
+![logo](https://github.com/labstructbioinf/rossmann-toolbox/blob/main/logo.png?raw=true)
 
-## Cookbook
-### Init
+### Cookbook
+#### Init
 ```python
 from rossmann_toolbox import RossmannToolbox
 rtb = RossmannToolbox(use_gpu=True)
 ```
-### Evaluate cores
+#### Evaluate cores
 
 ```python
 data = {'seq1': 'MSKKFNGKVCLVTGAGGNIGLATALRLAEEGTAIALLDMNREAL', 
@@ -31,7 +30,7 @@ preds = {'seq1': {'FAD': 0.0010036804,
   'SAM_std': 1.9881409e-05}}
 ```
 
-### Evaluate full-length sequences
+#### Evaluate full-length sequences
 ```python
 data = {'1piw_A': 'MSYPEKFEGIAIQSHEDWKNPKKTKYDPKPFYDHDIDIKIEACGVCGSDIHCAAGHWGNMKMPLVVGHEIVGKVVKLGPKSNSGLKVGQRVGVGAQVFSCLECDRCKNDNEPYCTKFVTTYSQPYEDGYVSQGGYANYVRVHEHFVVPIPENIPSHLAAPLLCGGLTVYSPLVRNGCGPGKKVGIVGLGGIGSMGTLISKAMGAETYVISRSSRKREDAMKMGADHYIATLEEGDWGEKYFDTFDLIVVCASSLTDIDFNIMPKAMKVGGRIVSISIPEQHEMLSLKPYGLKAVSISYSALGSIKELNQLLKLVSEKDIKIWVETLPVGEAGVHEAFERMEKGDVRYRFTLVGYDKEFSD'}
 preds = rtb.predict(data, mode='seq', importance=False)
@@ -47,8 +46,11 @@ preds = {'1piw_A': {'FAD': 2.0404239e-11,
   'sequence': 'NGCGPGKKVGIVGLGGIGSMGTLISKAMGAETYVISRSSRKR'}}
 ```
 
-## What next?
+### What next?
 
-To learn about other features of the `rossmann-toolbox`, such as structure-based prediction and results visualization, please refer to `example_minimal.ipynb`. 
+To learn about other features of the `rossmann-toolbox`, such as structure-based prediction and visualization of the results, please refer to `examples/example_minimal.ipynb`. 
 
-If you have any questions, problems or suggestions, please contact us. 
+If you have any questions, problems or suggestions, please contact us. The `rossmann-toolbox` was developed by Kamil Kaminski, Jan Ludwiczak, Maciej Jasinski, Adriana Bukala, 
+Rafal Madaj, Krzysztof Szczepaniak, and Stanislaw Dunin-Horkawicz.
+
+This work was supported by the First TEAM program of the Foundation for Polish Science co-financed by the European Union under the European Regional Development Fund.
