@@ -1,6 +1,6 @@
 # Rossmann Toolbox
 
-# Cookbook
+## Cookbook
 ### Init
 ```python
 from rossmann_toolbox import RossmannToolbox
@@ -45,3 +45,9 @@ preds = {'1piw_A': {'FAD': 2.0404239e-11,
   'SAM_std': 1.7599064e-08,
   'sequence': 'NGCGPGKKVGIVGLGGIGSMGTLISKAMGAETYVISRSSRKR'}}
 ```
+
+## What next?
+
+To learn about other features of the `rossmann-toolbox`, such as structure-based prediction and results visualization, please refer to `example_minimal.ipynb`. 
+
+If you have any questions, problems or suggestions, please contact us. 

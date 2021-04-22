@@ -176,7 +176,8 @@ class Deepligand3D:
         if verbose and (len(available_sequences) == 0):
             raise ValueError('mismatched keys')
         else:
-            print('seq to process:', len(available_sequences), num_sequences)
+        	pass
+            #print('seq to process:', len(available_sequences), num_sequences)
         indices_with_embeddings = [i for i, seq in enumerate(indices) if seq in available_sequences]
         mask_with_embeddings = [True if idx in indices_with_embeddings else False for idx in indices]
         sequences_without_embeddings = set(indices) - available_sequences
@@ -263,12 +264,12 @@ class ShowNxGraph:
         
         
         if node_labels is not None:
-            sec_labels = {i: s for i,s in enumerate(secondary)}
-        #define topology
-            if len(set(secondary) - {'C1','C2', 'C3', 'C4', 'E1', 'E2', 'H1', 'H2'}) > 0:
-                secondary = reduce_ss_alphabet(secondary, True)
-            else:
-                secondary = {i : s for i,s in enumerate(secondary)}
+            sec_labels = {i: s for i,s in enumerate(node_labels)}
+        	#define topology
+            #if len(set(secondary) - {'C1','C2', 'C3', 'C4', 'E1', 'E2', 'H1', 'H2'}) > 0:
+            #    secondary = reduce_ss_alphabet(secondary, True)
+            #else:
+            #    secondary = {i : s for i,s in enumerate(secondary)}
                 
         if isinstance(node_positions, str):
             p = Positions(list(secondary.values()))

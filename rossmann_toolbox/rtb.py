@@ -455,7 +455,7 @@ class RossmannToolbox:
 		else:
 			return predictions
 
-	def predict_structure(self, path_pdb='', chain_list=None, mode = 'core', core_detect_mode = 'dl', core_list=None):
+	def predict_structure(self, path_pdb='', chain_list=None, mode = 'core', core_detect_mode = 'dl', core_list=None, importance = False):
 		"""
 		structure-based prediction
 		:param path_pdb: path to directory with pdb structures & foldx data
@@ -488,11 +488,15 @@ class RossmannToolbox:
 			chain_list = [f.replace('.pdb', '') for f in chain_list if f.endswith('.pdb')]
 			chain_list = [f for f in chain_list if len(f) == 6]
 		
-		feats = self.struct_evaluate_cores(path_pdb, chain_list, mode, core_detect_mode, core_list)
-		results = self.dl3d.predict(**feats)
-		return results.to_dict(orient='records')
-	
-	
+		self.feats3d = self.struct_evaluate_cores(path_pdb, chain_list, mode, core_detect_mode, core_list)
+		results = self.dl3d.predict(**self.feats3d).to_dict(orient='records')
+
+		if importance:
+			results_imp = self.dl3d.generate_embeddings(**self.feats3d)
+			return results, results_imp
+		else:
+			return results
+		
 class StructPrep:
 	foldx_suffix = '_Repair.pdb'
 	foldx_feat_suffix = '_Repair_PN.fxout'
