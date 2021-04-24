@@ -17,10 +17,10 @@ pytorch-lightning = "1.2.8"
 csb = "^1.2.5"
 seqvec = "0.4.1"
 overrides = "^3.0"
-pytest = "^6.2.3"
-pytest-cov = "^2.11.1"
 
 [tool.poetry.dev-dependencies]
+pytest = "^6"
+pytest-cov = "^2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
