@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "rossmann-toolbox"
+version = "0.1.0"
+description = ""
+authors = ["Kamil Kaminski <k.kaminski@cent.uw.edu.pl>", "Jan Ludwiczak <j.ludwiczak@cent.uw.edu.pl>", "Stanislaw Dunin-Horkawicz <s.dunin-horkawicz@cent.uw.edu.pl>"]
+
+[tool.poetry.dependencies]
+python = "^3.6.1"
+aiohttp = "^3.7.4"
+atomium = "1.0.9"
+biopython = "1.78"
+captum = "0.3.1"
+conditional = "^1.3"
+dgl = "0.6.1"
+pandas = "1.1.5"
+pytorch-lightning = "1.2.8"
+csb = "^1.2.5"
+seqvec = "0.4.1"
+overrides = "^3.0"
+pytest = "^6.2.3"
+pytest-cov = "^2.11.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
