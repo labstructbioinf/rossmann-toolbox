@@ -187,8 +187,9 @@ class RossmannToolbox:
 		device_type = 'cuda' if self.use_gpu else 'cpu'
 	
 		return Deepligand3D(weights_list_fn, device_type)
-	
-	def _get_cores_from_seq(self, data, detected_cores):
+
+	@staticmethod
+	def _filter_cores(data, detected_cores):
 		"""
 		Parses output of `seq_detect_cores` to dictionary with core sequences
 		:param data: Input data - a dictionary with ids and corresponding full sequences as keys and values
@@ -373,7 +374,7 @@ class RossmannToolbox:
 			if mode=='seq':
 				data = {chain:pdbseq}
 				detected_cores = self.seq_detect_cores(data, mode=core_detect_mode)				
-				filtred_cores = self._get_cores_from_seq(data, detected_cores)
+				filtred_cores = self._filter_cores(data, detected_cores)
 			# use core sequence provided by the user
 			else:
 				filtred_cores = {chain:core_list[chain_pos]}
@@ -440,7 +441,7 @@ class RossmannToolbox:
 		# Full length sequence input
 		if mode == 'seq':
 			detected_cores = self.seq_detect_cores(data, mode=core_detect_mode)
-			data = filtred_cores = self._get_cores_from_seq(data, detected_cores)
+			data = self._filter_cores(data, detected_cores)
 
 		if importance:
 			predictions, attrs = self.seq_evaluate_cores(data, importance=importance)
