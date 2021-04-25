@@ -61,7 +61,7 @@ class RossmannToolbox:
 		if self._foldx_loc is not None:
 			if not self._check_foldx():
 				raise RuntimeError(
-					'Foldx v5 binary not detected in the specified location: \'{}\''.format(self._foldx_loc))
+					'Foldx v4 binary not detected in the specified location: \'{}\''.format(self._foldx_loc))
 			else:
 				self.dl3d = self._setup_dl3d()
 		else:
@@ -95,7 +95,7 @@ class RossmannToolbox:
 		if 'foldX time has expired' in output.split('\n')[-8]:
 			raise RuntimeError('FoldX5 license expired, renew the binary and restart RossmannToolbox!')
 			return False
-		return 'FoldX 5' in output.split('\n')[2]
+		return 'FoldX 4' in output.split('\n')[2]
 
 	def _run_hhsearch(self, sequence, min_prob=0.5):
 		temp = tempfile.NamedTemporaryFile(mode='w+t')
