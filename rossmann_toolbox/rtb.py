@@ -30,12 +30,12 @@ warnings.showwarning = custom_warning
 
 class RossmannToolbox:
 	struct_utils = None
-	def __init__(self, n_cpu = -1, use_gpu=True, path_foldx_bin=None, hhsearch_loc=None):
+	def __init__(self, n_cpu = -1, use_gpu=True, foldx_loc=None, hhsearch_loc=None):
 		"""
 		Rossmann Toolbox - A framework for predicting and engineering the cofactor specificity of Rossmann-fold proteins
 		:param n_cpu: Number of CPU cores to use in the CPU-dependent calculations. n_cpu=-1 will use all available cores
 		:param use_gpu: Use GPU to speed up predictions
-		:param path_foldx_bin: optional absolute path to foldx binary file needed for structure-based predictions
+		:param foldx_loc: optional absolute path to foldx binary file required for structure-based predictions
 		:param hhsearch_loc: Location of hhsearch binary (v3.* required) for hhsearch-enabled Rossmann core detection
 		"""
 		self.label_dict = {'FAD': 0, 'NAD': 1, 'NADP': 2, 'SAM': 3}
@@ -56,36 +56,53 @@ class RossmannToolbox:
 		self._path = os.path.dirname(os.path.abspath(__file__))
 		self._seqvec = self._setup_seqvec()
 		self._weights_prefix = f'{self._path}/weights/'
-		self._path_foldx_bin = path_foldx_bin
+		self._foldx_loc = foldx_loc
 	
-		if self._path_foldx_bin is not None:
-			self.dl3d = self._setup_dl3d()
+		if self._foldx_loc is not None:
+			if not self._check_foldx():
+				raise RuntimeError(
+					'Foldx v5 binary not detected in the specified location: \'{}\''.format(self._foldx_loc))
+			else:
+				self.dl3d = self._setup_dl3d()
 		else:
-			print('FoldX path was not provided. The structure-based prediction functionality will be disabled.')
+			warnings.warn('FoldX path was not provided. The structure-based prediction functionality will be disabled.')
 
-		self.hhsearch_loc = hhsearch_loc
-		if self.hhsearch_loc is not None:
+		self._hhsearch_loc = hhsearch_loc
+		if self._hhsearch_loc is not None:
 			if not self._check_hhsearch():
-				raise ValueError(
-					'HHsearch v3 binary not detected in the specified location: \'{}\''.format(self.hhblits_loc))
+				raise RuntimeError(
+					'HHsearch v3 binary not detected in the specified location: \'{}\''.format(self._hhsearch_loc))
 		else:
-			print("HHpred path was not provided. The HHsearch-based prediction of cores won't be available.")
+			warnings.warn(
+				"HHpred path was not provided. The HHsearch-based prediction of Rossmann cores won't be available")
 
 	def _check_hhsearch(self):
 		try:
-			output = subprocess.check_output(self.hhsearch_loc, universal_newlines=True)
+			output = subprocess.check_output(self._hhsearch_loc, universal_newlines=True)
 		except subprocess.CalledProcessError as e:
 			output = e.output
 		except (FileNotFoundError, PermissionError):
 			return False
 		return output.split('\n')[0].startswith('HHsearch 3')
 
+	def _check_foldx(self):
+		try:
+			output = subprocess.check_output(self._foldx_loc, universal_newlines=True)
+		except subprocess.CalledProcessError as e:
+			output = e.output
+		except (FileNotFoundError, PermissionError):
+			return False
+		if 'foldX time has expired' in output.split('\n')[-8]:
+			raise RuntimeError('FoldX5 license expired, renew the binary and restart RossmannToolbox!')
+			return False
+		return 'FoldX 5' in output.split('\n')[2]
+
 	def _run_hhsearch(self, sequence, min_prob=0.5):
 		temp = tempfile.NamedTemporaryFile(mode='w+t')
 		temp.writelines(">seq\n{}\n".format(sequence))
 		temp.seek(0)
 		fn = temp.name
-		cmd = f'{self.hhsearch_loc} -i {fn} -d {self._path}/utils/hhdb/core -n 1'
+		cmd = f'{self._hhsearch_loc} -i {fn} -d {self._path}/utils/hhdb/core -n 1'
 		result = subprocess.call(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		temp.close()
 		if result == 0:
@@ -415,7 +432,7 @@ class RossmannToolbox:
 								
 	def struct_evaluate_cores(self, path, chain_list, mode, core_detect_mode, core_list):
 								
-		self.struct_utils = StructPrep(path, self._path_foldx_bin)
+		self.struct_utils = StructPrep(path, self._foldx_loc)
 		self._prepare_struct_files(chain_list)
 		data = self._prepare_struct_feats(chain_list, mode, core_detect_mode, core_list)                                    
 		return data                     
@@ -477,8 +494,8 @@ class RossmannToolbox:
 			else:
 				assert len(chain_list) == len(core_list), 'the number of chains must equal to the number of cores'
 	
-		if self._path_foldx_bin is None:
-			raise RuntimeError('foldx binary location is not specified re-run `RossmannToolbox` with `path_foldx_bin`')
+		if self._foldx_loc is None:
+			raise RuntimeError('foldx binary location is not specified re-run `RossmannToolbox` with `foldx_loc`')
 	
 		if not os.path.isdir(path_pdb):
 			raise NotADirectoryError(f'given path_pdb: {path_pdb} is not a directory')
