@@ -199,11 +199,9 @@ class RossmannToolbox:
 		Load DL3D model to either GPU or CPU
 		:return: structural graph predictor instance
 		"""
-		weights_dir = f'{self._path}/weights/struct_ensemble'
-		weights_list_fn = [f'{weights_dir}/model{i}.ckpt' for i in range(1, 5)]
-		device_type = 'cuda' if self.use_gpu else 'cpu'
-	
-		return Deepligand3D(weights_list_fn, device_type)
+		weights_dir = f'{self._path}/weights'
+		device_type = 'cpu'
+		return Deepligand3D(weights_dir, device_type)
 
 	@staticmethod
 	def _filter_cores(data, detected_cores):
