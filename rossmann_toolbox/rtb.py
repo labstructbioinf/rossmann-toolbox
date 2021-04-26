@@ -30,13 +30,14 @@ warnings.showwarning = custom_warning
 
 class RossmannToolbox:
 	struct_utils = None
-	def __init__(self, n_cpu = -1, use_gpu=True, foldx_loc=None, hhsearch_loc=None):
+	def __init__(self, n_cpu = -1, use_gpu=True, foldx_loc=None, hhsearch_loc=None, dssp_loc=None):
 		"""
 		Rossmann Toolbox - A framework for predicting and engineering the cofactor specificity of Rossmann-fold proteins
 		:param n_cpu: Number of CPU cores to use in the CPU-dependent calculations. n_cpu=-1 will use all available cores
 		:param use_gpu: Use GPU to speed up predictions
 		:param foldx_loc: optional absolute path to foldx binary file required for structure-based predictions
-		:param hhsearch_loc: Location of hhsearch binary (v3.* required) for hhsearch-enabled Rossmann core detection
+		:param hhsearch_loc: Location of hhsearch binary (v3.*) required for hhsearch-enabled Rossmann core detection
+		:param dssp_loc: Location of the DSSP binary required for structure-based predictions
 		"""
 		self.label_dict = {'FAD': 0, 'NAD': 1, 'NADP': 2, 'SAM': 3}
 		self.rev_label_dict = {value: key for key, value in self.label_dict.items()}
@@ -57,15 +58,12 @@ class RossmannToolbox:
 		self._seqvec = self._setup_seqvec()
 		self._weights_prefix = f'{self._path}/weights/'
 		self._foldx_loc = foldx_loc
-	
 		if self._foldx_loc is not None:
 			if not self._check_foldx():
 				raise RuntimeError(
 					'Foldx v4 binary not detected in the specified location: \'{}\''.format(self._foldx_loc))
-			else:
-				self.dl3d = self._setup_dl3d()
 		else:
-			warnings.warn('FoldX path was not provided. The structure-based prediction functionality will be disabled.')
+			warnings.warn('FoldX binary location was not provided. The structure-based prediction functionality will be disabled.')
 
 		self._hhsearch_loc = hhsearch_loc
 		if self._hhsearch_loc is not None:
@@ -75,6 +73,17 @@ class RossmannToolbox:
 		else:
 			warnings.warn(
 				"HHpred path was not provided. The HHsearch-based prediction of Rossmann cores won't be available")
+
+		self._dssp_loc = dssp_loc
+		if self._dssp_loc is not None:
+			if not self._check_dssp():
+				raise RuntimeError(
+					'DSSP binary not detected in the specified location: \'{}\''.format(self._dssp_loc))
+		else:
+			warnings.warn('DSSP binary location was not provided. The structure-based prediction functionality will be disabled.')
+
+		if self._foldx_loc is not None and self._dssp_loc is not None:
+			self.dl3d = self._setup_dl3d()
 
 	def _check_hhsearch(self):
 		try:
@@ -96,6 +105,15 @@ class RossmannToolbox:
 			raise RuntimeError('FoldX5 license expired, renew the binary and restart RossmannToolbox!')
 			return False
 		return 'FoldX 4' in output.split('\n')[2]
+
+	def _check_dssp(self):
+		try:
+			output = subprocess.check_output(self._dssp_loc, universal_newlines=True, stderr=subprocess.STDOUT)
+		except subprocess.CalledProcessError as e:
+			output = e.output
+		except (FileNotFoundError, PermissionError):
+			return False
+		return output.split('\n')[0].startswith('mkdssp')
 
 	def _run_hhsearch(self, sequence, min_prob=0.5):
 		temp = tempfile.NamedTemporaryFile(mode='w+t')
@@ -407,7 +425,7 @@ class RossmannToolbox:
 				pdb_list = pdbids[core_pos:core_pos+len(core_seq)]
 				assert len(pdb_list) == len(core_seq)
 								
-				raw_ss = extract_core_dssp(path_pdb_rep_file, pdb_list, core_seq)
+				raw_ss = extract_core_dssp(path_pdb_rep_file, pdb_list, core_seq, dssp_loc=self._dssp_loc)
 				extended_ss = separate_beta_helix(raw_ss)
 
 				frame_list.append({
@@ -492,8 +510,9 @@ class RossmannToolbox:
 			else:
 				assert len(chain_list) == len(core_list), 'the number of chains must equal to the number of cores'
 	
-		if self._foldx_loc is None:
-			raise RuntimeError('foldx binary location is not specified re-run `RossmannToolbox` with `foldx_loc`')
+		if self._foldx_loc is None or self._dssp_loc is None:
+			raise RuntimeError(
+				'Locations of binaries (DSSP and FoldX) were not specified. Re-run `RossmannToolbox` with `foldx_loc`, and `dssp_loc`')
 	
 		if not os.path.isdir(path_pdb):
 			raise NotADirectoryError(f'given path_pdb: {path_pdb} is not a directory')

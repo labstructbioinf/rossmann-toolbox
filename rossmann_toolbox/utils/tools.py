@@ -11,17 +11,17 @@ def run_command(cmd):
 	return proc.stdout.decode('utf-8')
 
 def add_wt_pdb_list(wt_seq, wt_pdb_list):
-    wt_pdb_list=wt_pdb_list.copy()
+	wt_pdb_list=wt_pdb_list.copy()
     
-    if wt_seq.find('-')==-1: return wt_pdb_list
-    new_wt_pdb_list = []
-    for pos, aa in enumerate(list(wt_seq)):
+	if wt_seq.find('-')==-1: return wt_pdb_list
+	new_wt_pdb_list = []
+	for pos, aa in enumerate(list(wt_seq)):
 
-        if aa!='-':
-            new_wt_pdb_list.append(wt_pdb_list.pop(0))
-        else:
-            new_wt_pdb_list.append(None)
-    return new_wt_pdb_list
+		if aa!='-':
+			new_wt_pdb_list.append(wt_pdb_list.pop(0))
+		else:
+			new_wt_pdb_list.append(None)
+	return new_wt_pdb_list
 
 def generate_mutations(mutations_df, insertions=True):
 	"""
@@ -74,8 +74,8 @@ def extract_core(pdb_path, chain, pdb_list, expected_seq):
 	assert tmp[1] == expected_seq, f'failed to save the core from {pdb_path}\n{core_seq}\n{expected_seq}'
 	return out_file_name
 	
-def extract_core_dssp(template_pdb_file, wt_pdb_list, expected_seq):
-	dssp_data = run_dssp(template_pdb_file)     
+def extract_core_dssp(template_pdb_file, wt_pdb_list, expected_seq, dssp_loc=None):
+	dssp_data = run_dssp(template_pdb_file, dssp_bin=dssp_loc)
 	wt_core_idx = dssp_data.pdb_num.isin(wt_pdb_list)
 	wt_seq_dssp = "".join(dssp_data[wt_core_idx].pdb_resn) 
 	if wt_seq_dssp.find("X")!=-1:    
