@@ -3,7 +3,7 @@
 ![python-ver](https://img.shields.io/badge/python-%3E=3.6.1-blue)
 [![codecov](https://codecov.io/gh/labstructbioinf/rossmann-toolbox/branch/main/graph/badge.svg)](https://codecov.io/gh/labstructbioinf/rossmann-toolbox)
 
-<b> Prediction and re-engineering of the cofactor specificity of the Rossmann-fold proteins</b>
+<b> Prediction and re-engineering of the cofactor specificity of Rossmann-fold proteins</b>
 
 ### Installation
 
