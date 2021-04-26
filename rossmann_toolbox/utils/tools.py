@@ -7,8 +7,9 @@ from .solveX import solveX
 from .dssp import get_dssp_seq, parse_dssp_output, run_dssp
 
 def run_command(cmd):
-	proc = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE)
-	return proc.stdout.decode('utf-8')
+	cmd = 'LIBC_FATAL_STDERR_=1 ' + cmd # Suppress warnings of 'safe' crash in some FoldX calculation
+	result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	return result.returncode
 
 def add_wt_pdb_list(wt_seq, wt_pdb_list):
 	wt_pdb_list=wt_pdb_list.copy()
