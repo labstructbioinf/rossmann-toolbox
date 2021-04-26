@@ -1,5 +1,6 @@
 ![logo](https://github.com/labstructbioinf/rossmann-toolbox/blob/main/logo.png?raw=true)
 
+[![codecov](https://codecov.io/gh/labstructbioinf/rossmann-toolbox/branch/main/graph/badge.svg)](https://codecov.io/gh/labstructbioinf/rossmann-toolbox) 
 ### Cookbook
 #### Init
 ```python
