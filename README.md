@@ -7,7 +7,9 @@
 
 ### Installation
 
-```pip install rossmann-toolbox```
+```
+pip install rossmann-toolbox
+```
 
 Alternatively, to get the most recent changes, install directly from the repository:
 ```
