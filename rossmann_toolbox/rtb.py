@@ -113,7 +113,7 @@ class RossmannToolbox:
 			output = e.output
 		except (FileNotFoundError, PermissionError):
 			return False
-		return output.split('\n')[0].startswith('mkdssp')
+		return output.split('\n')[0].startswith('mkdssp 3')
 
 	def _run_hhsearch(self, sequence, min_prob=0.5):
 		temp = tempfile.NamedTemporaryFile(mode='w+t')

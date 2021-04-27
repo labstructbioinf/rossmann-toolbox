@@ -18,7 +18,7 @@ pip install git+https://github.com/labstructbioinf/rossmann-toolbox.git
 
 #### For some of the features additional dependencies are required:
 - [<b>FoldX4</b>](http://foldxsuite.crg.eu/)
-- [<b>DSSP</b>](https://github.com/cmbi/dssp)
+- [<b>DSSP3</b>](https://github.com/cmbi/dssp)
 - [<b>HH-suite3</b>](https://github.com/soedinglab/hh-suite)
 
 
