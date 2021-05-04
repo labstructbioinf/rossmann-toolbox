@@ -17,10 +17,11 @@ pip install git+https://github.com/labstructbioinf/rossmann-toolbox.git
 ```
 
 #### For some of the features additional dependencies are required:
-- [<b>FoldX4</b>](http://foldxsuite.crg.eu/)
-- [<b>DSSP3</b>](https://github.com/cmbi/dssp)
-- [<b>HH-suite3</b>](https://github.com/soedinglab/hh-suite)
-
+| package                                       | required|
+|-----------------------------------------------|---------|
+|[**FoldX4**](http://foldxsuite.crg.eu/)      | struct |
+|[**DSSP3**](https://github.com/cmbi/dssp)    | struct |
+|[**HH-suite3**](https://github.com/soedinglab/hh-suite) |struct and seq|
 
 ### Getting started
 
@@ -38,8 +39,36 @@ preds = {'3m6i_A': {'FAD': 0.0008955444,
                     'NADP': 0.00015508455,
                     'SAM': 0.0002544397, ...}}
 ```
+
+#### Structure-based approach
+Preparation steps are the same as above, but additionally, structural features are calculated via **FOLDX** software, and secondary structure features via **DSSP**
+```python
+# required binaries
+PATH_FOLDX = ...
+PATH_HHPRED = ...
+PATH_DSSP = ...
+
+path_to_structures = ...  # path to pdb files
+chains_to_use = ... # chains to load from `path_to_structures`
+rtb = RossmannToolbox(use_gpu=False, foldx_loc = PATH_FOLDX, 
+                                    hhsearch_loc = PATH_HHPRED,
+                                    dssp_loc = PATH_DSSP)
+
+preds = rtb.predict_structure(path_to_structures, chains_to_use, mode='seq', core_detect_mode='dl')
+preds = [{'NAD': 0.99977881,
+  'NADP': 0.0018195,
+  'SAM': 0.00341983,
+  'FAD': 3.62e-05,
+  'seq': 'AGVRLGDPVLICGAGPIGLITMLCAKAAGACPLVITDIDEGRL',
+  'NAD_std': 0.0003879,
+  'NADP_std': 0.00213571,
+  'SAM_std': 0.00411747,
+  'FAD_std': 3.95e-05}]
+```
+
+
 #### What next?
-To learn about other features of the `rossmann-toolbox`, such as <b>structure-based prediction</b> and <b>visualization of the results</b>, please refer to the notebook `examples/example_minimal.ipynb`. 
+To learn about other features of the `rossmann-toolbox`, such as <b>visualization of the results</b>, please refer to the notebook `examples/example_minimal.ipynb`. 
 
 ### Contact
 If you have any questions, problems or suggestions, please contact us.  The `rossmann-toolbox` was developed by Kamil Kaminski, Jan Ludwiczak, Maciej Jasinski, Adriana Bukala, 

@@ -9,21 +9,11 @@ def run_dssp(pdb_path, dssp_bin=None):
     dssp_data = parse_dssp_output(dssp_path)
     return dssp_data 
 
-def get_dssp_seq(fn):
-    """
-	Extracts sequence from DSSP output file.
-	:param fn: input filename
-	:return: sequence in PDB structure
-	# TODO: Connectivity info??
-	"""
-    f = open(fn, 'r')
-    out_dict, keys = _make_dssp_dict(f)
-    seq = [(out_dict[key][0]) for key in keys]
-    f.close()
-    return ''.join(seq)
 
 def parse_dssp_output(dssp_fn, use_gzip=False):
-
+    '''
+    extracts secondary structure labels frm dssp file
+    '''
     if use_gzip:
         f = gzip.open(dssp_fn, 'rt')
     else:

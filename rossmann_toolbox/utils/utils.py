@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 import numpy as np
 import warnings
 from scipy.signal import find_peaks
@@ -60,48 +62,17 @@ def corr_seq(seq):
     return seq
 
 
-def enhance_dssp_labels(secondary):
-    """
-    adds numbers to betas and helices eg. from `H-E-H-E-H` -> `'H1-E1-H2-E2-H3'
-    :param secondary: dssp labels for core
-    :return ehnanced labels
-    """
-
-def separate_by_middle(secondary):
-    '''
-    changes labels of betas of dssp sequences to `E1` - `E2`
-    '''
-    if isinstance(secondary, str):
-        secondary = list(secondary)
-    elif not isinstance(secondary, (list, np.ndarray)):
-        raise ValueError(f'secondary must be list/array, but passed {type(secondary)} {secondary}')
-        
-    sec_len = len(secondary)
-    h_start = sec_len//2
-    secondary_fixed = []
-    for i, xi in enumerate(secondary):
-        if xi == 'E':
-            if i <= h_start:
-                ss = 'E1'
-            else:
-                ss = 'E2'
-        elif xi == ' ':
-            ss = '-'
-        else:
-            ss = xi
-        secondary_fixed.append(ss)
-    return secondary_fixed
-
-
 def separate_beta_helix(secondary):
     '''
     changes labels of helices in dssp sequences, adding number for them for instance:
     `H-E1-H-E2-H` to `'H1-E1-H2-E2-H3'
+    :params iterable with chars indicating dssp annotations
+    "return listo of chars enhanced dssp annotations"
     '''
     if isinstance(secondary, str):
         secondary = list(secondary)
-    elif not isinstance(secondary, (list, np.ndarray)):
-        raise ValueError(f'secondary must be list/array, but passed {type(secondary)} {secondary}')
+    elif not isinstance(secondary, Iterable):
+        raise ValueError(f'secondary must be iterable, but passed {type(secondary)}')
         
     sec_len = len(secondary)
     #E1 E2 split condition
@@ -109,7 +80,7 @@ def separate_beta_helix(secondary):
     #H split condition
     e_indices = [i for i, letter in enumerate(secondary)  if letter =='E']
     e_min, e_max = min(e_indices), max(e_indices)
-    secondary_extended = []
+    secondary_extended = list()
     for i, letter in enumerate(secondary):
         if letter == 'E':
             if i <= h_start:

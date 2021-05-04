@@ -42,25 +42,6 @@ def generate_Cb(residue):
 	cb_at_origin=n.left_multiply(rot)
 	return np.array(list(cb_at_origin+ca ))
 
-
-def prairwaise_vec(arr):
-
-	arr_size = arr.shape[0]
-	distances = np.zeros((arr_size, arr_size))
-
-	for i, x in enumerate(arr):
-		for j,y in enumerate(arr):
-		
-			if i < j:
-				break
-			elif i == j:
-				distances[i,i] = np.dot(x,y)
-			else:
-				distances[i,j] = np.dot(x,y)
-				distances[j,i] = distances[i, j]
-			
-	return distances
-
 def side_chains_angles(C_a, C_b):
 
 	'''
@@ -86,19 +67,6 @@ def side_chains_angles(C_a, C_b):
 			if i < j:
 				break
 	return angles
-
-
-def compute_dssp(fname):
-	'''
-	computes dssp from fname
-	source: https://biopython.org/docs/1.75/api/Bio.PDB.DSSP.html
-	'''
-	assert os.path.isfile(fname), 'no such file'
-	dssp_tuple = dssp_dict_from_pdb_file(fname)
-	sec_struc = []
-	for k,v in dssp_tuple[0].items():
-		sec_struc.append(v[1])
-	return sec_struc
 
 def calculate_adjecency(fname, pdb_chain, pdb_list, seq, get_angle=True, include_nones=True, **kw_args):
 	'''

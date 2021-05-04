@@ -1,11 +1,5 @@
 import argparse
 
-import numpy as np
-import torch
-from torch import nn
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-from sklearn.metrics import f1_score, matthews_corrcoef
-
 from .structmodel import GAT
 
 class GatLit(GAT):

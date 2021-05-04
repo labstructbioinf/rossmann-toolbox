@@ -28,10 +28,11 @@ def sigmoid(x):
     return 1/(1 + np.exp(-x))
        
 class Deepligand3D:
-    COFACTORS = ['NAD', 'NADP', 'SAM', 'FAD']
     NUM_WORKERS = 4
     LABEL_DICT = {'NAD' : 0, 'NADP' : 1, 'SAM' : 2,  'FAD' : 3}
     LABEL_DICT_R = {0 :'NAD', 1 :'NADP', 2 :'SAM',  3:'FAD' }
+    COFACTORS = list(LABEL_DICT.keys())
+    CM_THRESHOLD = None # assigned when data loader is initialized
     def __init__(self, weights_dir, device='cpu', **kw_args):
         """
         Monte carlo Deepligand version
@@ -112,16 +113,16 @@ class Deepligand3D:
 
         df_results = pd.DataFrame(means_with_nans, columns=self.COFACTORS)
         df_results_std = pd.DataFrame(stds_with_nans, columns=self.COFACTORS_STD)
-        df_results['cofactor'] = self.__number_to_class(means_with_nans.argmax(1))
         df_results['seq'] = self.sequences
-        df_output = pd.concat([df_results, df_results_std], axis=1)
+        df_output = pd.concat([df_results, df_results_std], axis=1).round(8)
         del df_results, df_results_std
 
         return df_output
 
 
     def _prepare_samples(self, dataframe, contact_maps, edge_feats, foldx_info, BATCH_SIZE=64):
-
+        
+        self.CM_THRESHOLD = GraphECMLoaderBalanced.threshold
         dataset = GraphECMLoaderBalanced(frame=dataframe,
                         contact_maps=contact_maps,
                         edge_features=edge_feats,
@@ -140,18 +141,8 @@ class Deepligand3D:
         loader = DataLoader(dataset, collate_fn=collate, **kw_args)
         return loader
 
-    def __number_to_class(self, values):
-        classes = []
-        for v in values:
-            if v in self.LABEL_DICT_R.keys():
-                classes.append(self.LABEL_DICT_R[v])
-            else:
-                classes.append('unknown')
-        classes = np.asarray(classes)
-        return classes
-
-
-    def generate_embeddings(self, dataframe, contact_maps, edge_feats, foldx_info, verbose=False, **kw_args):
+    def generate_embeddings(self, dataframe, contact_maps, edge_feats, foldx_info, verbose=False,
+                            as_array=False, **kw_args):
         """
         params:
             dataframe (pd.DataFrame) with 'seq' and 'secondary' columns
@@ -159,8 +150,9 @@ class Deepligand3D:
             edge_feats (dict) similar as above
             raw_scores (bool) if True probabilities are replaced with raw scores
             verbose (bool) default False
+            as_array (bool) if True returns numpy array
         returns:
-            pd.DataFrame
+            np.ndarray/dict
         """
 
         available_sequences = foldx_info.keys() & contact_maps.keys() & edge_feats.keys()
@@ -168,6 +160,7 @@ class Deepligand3D:
         indices = dataframe.index.tolist()
         num_sequences = len(self.sequences)
         available_sequences = available_sequences & set(indices)
+        
         if verbose and (len(available_sequences) == 0):
             raise ValueError('mismatched keys')
         else:
@@ -176,6 +169,7 @@ class Deepligand3D:
         indices_with_embeddings = [i for i, seq in enumerate(indices) if seq in available_sequences]
         mask_with_embeddings = [True if idx in indices_with_embeddings else False for idx in indices]
         sequences_without_embeddings = set(indices) - available_sequences
+        
         if verbose and (len(sequences_without_embeddings) > 0):
             print(f'found {len(sequences_without_embeddings)} sequences without embeddings/contact maps')
             dataframe_no_missings = dataframe[~dataframe.index.isin(sequences_without_embeddings)].copy()
@@ -185,12 +179,15 @@ class Deepligand3D:
         loader = self._prepare_samples(dataframe_no_missings, contact_maps, edge_feats, foldx_info, BATCH_SIZE=1)
 
         single_preds = []
-        for x, _ in loader:
-            if self.device_type == 'cuda':
-                x = x.to(self.device)
-            storage = [self.forward_pass(x, model).unsqueeze(0) for model in self.model_list]
-            storage = torch.cat(storage, axis=0)
-            single_preds.append(storage)
+        with torch.no_grad():
+            for x, _ in loader:
+                if self.device_type == 'cuda':
+                    x = x.to(self.device)
+                storage = [self.forward_pass(x, model).unsqueeze(0) for model in self.model_list]
+                storage = torch.cat(storage, axis=0).cpu().numpy()
+                if not as_array:
+                    storage = {cof_name : storage[:, :, i].mean(0)[:, np.newaxis] for i, cof_name in enumerate(self.COFACTORS)}
+                single_preds.append(storage)
         del loader
         return single_preds
 

@@ -4,7 +4,7 @@ import subprocess
 import atomium
 sys.path.append(__file__)
 from .solveX import solveX
-from .dssp import get_dssp_seq, parse_dssp_output, run_dssp
+from .dssp import parse_dssp_output, run_dssp
 
 def run_command(cmd):
 	cmd = 'LIBC_FATAL_STDERR_=1 ' + cmd # Suppress warnings of 'safe' crash in some FoldX calculation

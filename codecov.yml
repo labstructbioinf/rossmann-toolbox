@@ -1,0 +1,4 @@
+ignore:
+  - rossmann-toolbox/rossmann_toolbox/utils/myfoldx.py
+  - rossmann-toolbox/rossmann_toolbox/utils/solveX.py
+  - rossmann-toolbox/rossmann_toolbox/utils/tools.py
