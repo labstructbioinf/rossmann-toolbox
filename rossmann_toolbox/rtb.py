@@ -19,7 +19,7 @@ from rossmann_toolbox.models import SeqCoreEvaluator, SeqCoreDetector
 from conditional import conditional
 from captum.attr import IntegratedGradients
 
-from rossmann_toolbox.utils import MyFoldX, fix_TER
+from rossmann_toolbox.utils import MyFoldX, fix_TER, solveX
 from rossmann_toolbox.utils import separate_beta_helix
 from rossmann_toolbox.utils.tools import run_command, extract_core_dssp
 from rossmann_toolbox.utils import Deepligand3D
@@ -398,8 +398,10 @@ class RossmannToolbox:
 			path_pdb_file = os.path.join(self.struct_utils.path, chain) + '.pdb'
 			chain_struct = atomium.open(path_pdb_file)
 			chain_struct = chain_struct.model.chain(chain_id)
-			pdb_res = [res for res in chain_struct.residues() if seq1(res.name)!='X']
 			
+			# "...if seq1(res.name)!='X'" removed because we want to include non-canonical residues too
+			pdb_res = [res for res in chain_struct.residues() if res.full_name not in ['water']]
+				
 			# pdb ids for each residue
 			pdbids = [res.id.split('.')[1] for res in pdb_res]
 			pdbseq = "".join([seq1(res.name) for res in pdb_res]) 
@@ -418,10 +420,10 @@ class RossmannToolbox:
 			
 			frame_list = list()
 			for pdb_chain, core_seq in filtred_cores.items():
-			
-				core_pos = pdbseq.find(core_seq)
+				core_pos = solveX.solveX_rev(core_seq, pdbseq)[0]
+				
 				if core_pos == -1:
-					raise ValueError('could not map the core onto the chain sequence')
+					raise ValueError(f'could not map the core ({core_seq}) onto the chain sequence:\n\n{pdbseq}')
 					
 				pdb_list = pdbids[core_pos:core_pos+len(core_seq)]
 				assert len(pdb_list) == len(core_seq)
