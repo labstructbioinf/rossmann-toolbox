@@ -1,8 +1,13 @@
 [tool.poetry]
 name = "rossmann-toolbox"
 version = "0.1.0"
-description = ""
+description = "Prediction and re-engineering of the cofactor specificity of Rossmann-fold proteins"
 authors = ["Kamil Kaminski <k.kaminski@cent.uw.edu.pl>", "Jan Ludwiczak <j.ludwiczak@cent.uw.edu.pl>", "Stanislaw Dunin-Horkawicz <s.dunin-horkawicz@cent.uw.edu.pl>"]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/labstructbioinf/rossmann-toolbox"
+classifiers = ["Topic :: Scientific/Engineering :: Bio-Informatics", "License :: OSI Approved :: MIT License", "Intended Audience :: Science/Research", 
+               "Programming Language :: Python :: 3 :: Only", "Topic :: Scientific/Engineering :: Artificial Intelligence"]
 
 [tool.poetry.dependencies]
 python = "^3.6.1"
