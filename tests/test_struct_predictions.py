@@ -25,7 +25,7 @@ class TestStructPredictions:
         chains_to_use = ['3m6i_A']
         preds = rtb.predict_structure(path_to_structures, chains_to_use, mode='seq', core_detect_mode='dl')
         pr = list(preds[0].values())
-        del pr[4:6]
+        del pr[4]
         pr_arr = np.asarray(pr)
         ref_arr = np.load('test-data/ref/struct_full_length_detect_eval.npy')
         assert np.square(pr_arr.flatten() - ref_arr.flatten()).mean(axis=0) < 10e-5
