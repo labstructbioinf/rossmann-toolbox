@@ -310,7 +310,6 @@ class RossmannToolbox:
 		# Initialize importances and preds per fold values which latter will be averaged
 		preds_ens = []
 		attrs_ens = []
-
 		# Encode with SeqVec
 		embeddings = self._seqvec.encode(data, to_file=False)
 
@@ -384,7 +383,9 @@ class RossmannToolbox:
 				self.struct_utils.calc_struct_feats(chain)        
 	
 	def _prepare_struct_feats(self, pdb_chains, mode, core_detect_mode, core_list):
-	
+		"""
+		extract all features needed to run DL3D
+		"""
 		if self.struct_utils is None:
 			raise RuntimeError(' structural utilities are not initialized properly')
 		
@@ -494,6 +495,8 @@ class RossmannToolbox:
 		structure-based prediction
 		:param path_pdb: path to directory with pdb structures & foldx data
 		:param chain_list: list of chains used in predictions, if chain is not available it will be downloaded
+        :return Dictionary with the sequence ids and per-sequence predictions of the cofactor specificties
+        If importance is True
 		"""
 	
 		if not os.path.isabs(path_pdb):
@@ -531,7 +534,7 @@ class RossmannToolbox:
 			return results, results_imp
 		else:
 			return results
-		
+        	
 class StructPrep:
 	foldx_suffix = '_Repair.pdb'
 	foldx_feat_suffix = '_Repair_PN.fxout'
@@ -625,6 +628,8 @@ class StructPrep:
 			if os.path.getsize(path_file_full) > 0:
 				condition = True
 		return condition
+    
+
 	
 
 	
