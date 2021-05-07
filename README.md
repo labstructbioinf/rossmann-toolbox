@@ -75,8 +75,8 @@ To learn about other features of the `rossmann-toolbox`, such as <b>visualizatio
 If you find the `rossmann-toolbox` useful, please cite the preprint:
 
 "*Graph neural networks and sequence embeddings enable the prediction and design of the cofactor specificity of Rossmann fold proteins*"
-Kamil Kaminski, Jan Ludwiczak, Maciej Jasinski, Adriana Bukala, Rafal Madaj, Krzysztof Szczepaniak, and Stanislaw Dunin-Horkawicz
-bioRxiv 2021.05.05.440912; doi: (https://doi.org/10.1101/2021.05.05.440912)
+by Kamil Kaminski, Jan Ludwiczak, Maciej Jasinski, Adriana Bukala, Rafal Madaj, Krzysztof Szczepaniak, and Stanislaw Dunin-Horkawicz
+bioRxiv 2021.05.05.440912; doi: https://doi.org/10.1101/2021.05.05.440912
 
 #### Contact
 If you have any questions, problems or suggestions, please contact [us](https://lbs.cent.uw.edu.pl).
