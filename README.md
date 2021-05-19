@@ -9,7 +9,7 @@
 
 #### Before you start
 
-The `rossmann-toolbox` can be accessed via a web server available at (https://lbs.cent.uw.edu.pl/rossmann-toolbox)
+The `rossmann-toolbox` can be accessed via a web server available at https://lbs.cent.uw.edu.pl/rossmann-toolbox
 
 #### Instructions
 
