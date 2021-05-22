@@ -1,4 +1,4 @@
-![logo](https://github.com/labstructbioinf/rossmann-toolbox/blob/main/logo.png?raw=true)
+<img src="https://github.com/labstructbioinf/rossmann-toolbox/blob/main/logo.png" align="center">
 
 ![python-ver](https://img.shields.io/badge/python-%3E=3.6.1-blue)
 [![codecov](https://codecov.io/gh/labstructbioinf/rossmann-toolbox/branch/main/graph/badge.svg)](https://codecov.io/gh/labstructbioinf/rossmann-toolbox)
