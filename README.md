@@ -80,7 +80,7 @@ To learn about other features of the `rossmann-toolbox`, such as <b>visualizatio
 #### How to cite?
 If you find the `rossmann-toolbox` useful, please cite the preprint:
 
-"*Graph neural networks and sequence embeddings enable the prediction and design of the cofactor specificity of Rossmann fold proteins*"
+"*Rossmann-toolbox: a deep learning-based protocol for the prediction and design of cofactor specificity in Rossmann-fold proteins*"
 by Kamil Kaminski, Jan Ludwiczak, Maciej Jasinski, Adriana Bukala, Rafal Madaj, Krzysztof Szczepaniak, and Stanislaw Dunin-Horkawicz
 bioRxiv 2021.05.05.440912; doi: https://doi.org/10.1101/2021.05.05.440912
 
