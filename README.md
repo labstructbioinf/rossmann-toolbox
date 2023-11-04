@@ -1,37 +1,41 @@
+# Rossmann Toolbox
+
 <img src="https://github.com/labstructbioinf/rossmann-toolbox/blob/main/logo.png" align="center">
 
-![python-ver](https://img.shields.io/badge/python-%3E=3.6.1-blue)
-[![codecov](https://codecov.io/gh/labstructbioinf/rossmann-toolbox/branch/main/graph/badge.svg)](https://codecov.io/gh/labstructbioinf/rossmann-toolbox)
+The Rossmann Toolbox provides two deep learning models for predicting the cofactor specificity of Rossmann enzymes based on either the sequence or the structure of the beta-alpha-beta cofactor binding motif.
 
-<b> Prediction and re-engineering of the cofactor specificity of Rossmann-fold proteins</b>
+## Table of contents
+* [ Installation ](#Installation)
+* [ Usage ](#Usage)
+    + [Sequence-based approach](#sequence-based-approach)
+    + [Structure-based approach](#structure-based-approach)
+    + [EGATConv layer](#EGATConv-layer)
+* [ Remarks ](#Remarks)
+    + [How to cite](#how-to-cite)
+    + [Contact](#contact)
+    + [Funding](#funding)
 
-### Installation
+# Installation
 
-#### Before you start
-
-The `rossmann-toolbox` can be accessed via a web server available at https://lbs.cent.uw.edu.pl/rossmann-toolbox
-
-#### Instructions
-
+Create a conda environment:
+```bash
+conda create --name rtb python=3.6.2
+conda activate rtb
 ```
-pip install rossmann-toolbox
+
+Install pip in the environment:
+```bash
+conda install pip
 ```
 
-Alternatively, to get the most recent changes, install directly from the repository:
+Install rtb using `requirements.txt`:
+```bash
+pip install -r requirements.txt
 ```
-pip install git+https://github.com/labstructbioinf/rossmann-toolbox.git
-```
 
-#### For some of the features additional dependencies are required:
-| Package                                       | Sequence variant | Structure variant |
-|-----------------------------------------------|:----------------:|:-----------------:|
-|[**FoldX4**](http://foldxsuite.crg.eu/)        | -                | **required**      |
-|[**DSSP3**](https://github.com/cmbi/dssp)      | -                | **required**      |
-|[**HH-suite3**](https://github.com/soedinglab/hh-suite) | optional| optional          |
+# Usage
 
-### Getting started
-
-#### Sequence-based approach
+## Sequence-based approach
 The input is a full-length sequence. The algorithm first detects <b>Rossmann cores</b> (i.e. the β-α-β motifs that interact with the cofactor) in the sequence and later evaluates their cofactor specificity:
 ```python
 from rossmann_toolbox import RossmannToolbox
@@ -46,46 +50,25 @@ preds = {'3m6i_A': {'FAD': 0.0008955444,
                     'SAM': 0.0002544397, ...}}
 ```
 
-#### Structure-based approach
-The input is a protein structure. Preparation steps are the same as above, but additionally, structural features are calculated via **FOLDX** software, and secondary structure features via **DSSP**
-```python
-# required binaries
-PATH_FOLDX = ...
-PATH_HHPRED = ...
-PATH_DSSP = ...
+For more examples of how to use the sequence-based approach, see [example_minimal.ipynb](https://github.com/labstructbioinf/rossmann-toolbox/blob/main/examples/example_minimal.ipynb).
 
-path_to_structures = ...  # path to pdb files
-chains_to_use = ... # chains to load from `path_to_structures`
-rtb = RossmannToolbox(use_gpu=False, foldx_loc = PATH_FOLDX, 
-                                     hhsearch_loc = PATH_HHPRED,
-                                     dssp_loc = PATH_DSSP)
+## Structure-based approach
+Structure-based predictions are not currently available. We are working on a new version that will not only provide predictions, but also the ability to make specificity-shifting mutations.
 
-preds = rtb.predict_structure(path_to_structures, chains_to_use, mode='seq', core_detect_mode='dl')
-preds = [{'NAD': 0.99977881,
-  'NADP': 0.0018195,
-  'SAM': 0.00341983,
-  'FAD': 3.62e-05,
-  'seq': 'AGVRLGDPVLICGAGPIGLITMLCAKAAGACPLVITDIDEGRL',
-  'NAD_std': 0.0003879,
-  'NADP_std': 0.00213571,
-  'SAM_std': 0.00411747,
-  'FAD_std': 3.95e-05}]
-```
+## EGATConv layer
 
-#### What next?
-To learn about other features of the `rossmann-toolbox`, such as <b>visualization of the results</b>, please refer to the notebook `examples/example_minimal.ipynb`. 
+The structure-based predictor includes an EGAT layer that deals with graph neural networks supporting edge features. The EGAT layer is available from DGL, and you can find more details about it in the [DGL documentation](https://docs.dgl.ai/en/0.8.x/generated/dgl.nn.pytorch.conv.EGATConv.html). For a detailed description of the EGAT layer and its usage, please refer to the supplementary materials of the [Rossmann Toolbox paper](https://academic.oup.com/bib/article/23/1/bbab371/6375059).
 
-### Remarks
+# Remarks
+## How to cite?
+If you find the `rossmann-toolbox` useful, please cite the paper:
 
-#### How to cite?
-If you find the `rossmann-toolbox` useful, please cite the preprint:
+*Rossmann-toolbox: a deep learning-based protocol for the prediction and design of cofactor specificity in Rossmann fold proteins*
+Kamil Kamiński, Jan Ludwiczak, Maciej Jasiński, Adriana Bukala, Rafal Madaj, Krzysztof Szczepaniak, Stanisław Dunin-Horkawicz
+*Briefings in Bioinformatics*, Volume 23, Issue 1, January 2022, [bbab371](https://doi.org/10.1093/bib/bbab371)
 
-"*Rossmann-toolbox: a deep learning-based protocol for the prediction and design of cofactor specificity in Rossmann-fold proteins*"
-by Kamil Kaminski, Jan Ludwiczak, Maciej Jasinski, Adriana Bukala, Rafal Madaj, Krzysztof Szczepaniak, and Stanislaw Dunin-Horkawicz
-bioRxiv 2021.05.05.440912; doi: https://doi.org/10.1101/2021.05.05.440912
+## Contact
+If you have any questions, problems or suggestions, please contact [us](https://ibe.biol.uw.edu.pl/en/835-2/research-groups/laboratory-of-structural-bioinformatics/).
 
-#### Contact
-If you have any questions, problems or suggestions, please contact [us](https://lbs.cent.uw.edu.pl).
-
-#### Funding
+## Funding
 This work was supported by the First TEAM program of the Foundation for Polish Science co-financed by the European Union under the European Regional Development Fund.
