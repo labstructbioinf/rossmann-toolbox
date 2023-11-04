@@ -7,4 +7,5 @@ six==1.15.0
 seqvec==0.4.1
 gevent==1.4.0
 greenlet==1.0.0
+matplotlib==3.3.4
 
