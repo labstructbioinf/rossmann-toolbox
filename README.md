@@ -9,6 +9,7 @@ The Rossmann Toolbox provides two deep learning models for predicting the cofact
 * [ Usage ](#Usage)
     + [Sequence-based approach](#sequence-based-approach)
     + [Structure-based approach](#structure-based-approach)
+    + [EGATConv layer](#EGATConv-layer)
 * [ Remarks ](#Remarks)
     + [How to cite](#how-to-cite)
     + [Contact](#contact)
@@ -49,17 +50,22 @@ preds = {'3m6i_A': {'FAD': 0.0008955444,
                     'SAM': 0.0002544397, ...}}
 ```
 
+For more examples of how to use the sequence-based approach, see [example_minimal.ipynb](https://github.com/labstructbioinf/rossmann-toolbox/blob/main/examples/example_minimal.ipynb).
+
 ## Structure-based approach
 Structure-based predictions are not currently available. We are working on a new version that will not only provide predictions, but also the ability to make specificity-shifting mutations.
 
+## EGATConv layer
+
+The structure-based predictor includes an EGAT layer that deals with graph neural networks supporting edge features. The EGAT layer is available from DGL, and you can find more details about it in the [DGL documentation](https://docs.dgl.ai/en/0.8.x/generated/dgl.nn.pytorch.conv.EGATConv.html). For a detailed description of the EGAT layer and its usage, please refer to the supplementary materials of the [Rossmann Toolbox paper](https://academic.oup.com/bib/article/23/1/bbab371/6375059).
+
 # Remarks
-
 ## How to cite?
-If you find the `rossmann-toolbox` useful, please cite the preprint:
+If you find the `rossmann-toolbox` useful, please cite the paper:
 
-"*Rossmann-toolbox: a deep learning-based protocol for the prediction and design of cofactor specificity in Rossmann-fold proteins*"
-by Kamil Kaminski, Jan Ludwiczak, Maciej Jasinski, Adriana Bukala, Rafal Madaj, Krzysztof Szczepaniak, and Stanislaw Dunin-Horkawicz
-bioRxiv 2021.05.05.440912; doi: https://doi.org/10.1101/2021.05.05.440912
+*Rossmann-toolbox: a deep learning-based protocol for the prediction and design of cofactor specificity in Rossmann fold proteins*
+Kamil Kamiński, Jan Ludwiczak, Maciej Jasiński, Adriana Bukala, Rafal Madaj, Krzysztof Szczepaniak, Stanisław Dunin-Horkawicz
+*Briefings in Bioinformatics*, Volume 23, Issue 1, January 2022, [bbab371](https://doi.org/10.1093/bib/bbab371)
 
 ## Contact
 If you have any questions, problems or suggestions, please contact [us](https://ibe.biol.uw.edu.pl/en/835-2/research-groups/laboratory-of-structural-bioinformatics/).
