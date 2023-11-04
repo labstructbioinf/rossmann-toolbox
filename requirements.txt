@@ -1,0 +1,10 @@
+torch==1.10.2
+numpy==1.19.5
+typing-extensions==3.7.4.3
+certifi==2020.12.5
+idna==2.10
+six==1.15.0
+seqvec==0.4.1
+gevent==1.4.0
+greenlet==1.0.0
+
