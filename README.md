@@ -38,6 +38,7 @@ pip install -r requirements.txt
 ## Sequence-based approach
 The input is a full-length sequence. The algorithm first detects <b>Rossmann cores</b> (i.e. the β-α-β motifs that interact with the cofactor) in the sequence and later evaluates their cofactor specificity:
 ```python
+import matplotlib.pylab as plt
 from rossmann_toolbox import RossmannToolbox
 rtb = RossmannToolbox(use_gpu=True)
 
