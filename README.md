@@ -41,13 +41,27 @@ The input is a full-length sequence. The algorithm first detects <b>Rossmann cor
 from rossmann_toolbox import RossmannToolbox
 rtb = RossmannToolbox(use_gpu=True)
 
+# Eample 1
+# The b-a-b core is predicted in the full-length sequence
+
 data = {'3m6i_A': 'MASSASKTNIGVFTNPQHDLWISEASPSLESVQKGEELKEGEVTVAVRSTGICGSDVHFWKHGCIGPMIVECDHVLGHESAGEVIAVHPSVKSIKVGDRVAIEPQVICNACEPCLTGRYNGCERVDFLSTPPVPGLLRRYVNHPAVWCHKIGNMSYENGAMLEPLSVALAGLQRAGVRLGDPVLICGAGPIGLITMLCAKAAGACPLVITDIDEGRLKFAKEICPEVVTHKVERLSAEESAKKIVESFGGIEPAVALECTGVESSIAAAIWAVKFGGKVFVIGVGKNEIQIPFMRASVREVDLQFQYRYCNTWPRAIRLVENGLVDLTRLVTHRFPLEDALKAFETASDPKTGAIKVQIQSLE'}
 
-preds = rtb.predict(data, mode='seq')
-preds = {'3m6i_A': {'FAD': 0.0008955444,
-                    'NAD': 0.998446,
-                    'NADP': 0.00015508455,
-                    'SAM': 0.0002544397, ...}}
+preds = rtb.predict(data, mode='seq', core_detect_mode='dl', importance=False)
+
+# Eample 2
+# The b-a-b cores are provided by the user (WT vs mutant)
+
+data = {'seq_wt': 'AGVRLGDPVLICGAGPIGLITMLCAKAAGACPLVITDIDEGR', # WT, binds NAD
+        'seq_mut': 'AGVRLGDPVLICGAGPIGLITMLCAKAAGACPLVITSRDEGR'} # D211S, I212R mutant, binds NADP
+
+preds, imps = rtb.predict(data, mode='core', importance=True)
+
+# Example 3
+# Which residues contributed most to the prediction of WT as NAD-binding?
+seq_len = len(data['seq_wt'])
+plt.errorbar(list(range(1, seq_len+1)),
+             imps['seq_wt']['NAD'][0], yerr=imps['seq_wt']['NAD'][1], ecolor='grey')
+
 ```
 
 For more examples of how to use the sequence-based approach, see [example_minimal.ipynb](https://github.com/labstructbioinf/rossmann-toolbox/blob/main/examples/example_minimal.ipynb).
