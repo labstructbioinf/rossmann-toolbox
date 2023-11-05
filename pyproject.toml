@@ -10,7 +10,7 @@ classifiers = ["Topic :: Scientific/Engineering :: Bio-Informatics", "License ::
                "Programming Language :: Python :: 3 :: Only", "Topic :: Scientific/Engineering :: Artificial Intelligence"]
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = "^3.7"
 aiohttp = "^3.7.4"
 atomium = "1.0.9"
 biopython = "1.78"
@@ -21,6 +21,8 @@ pandas = "1.1.5"
 csb = "^1.2.5"
 seqvec = "0.4.1"
 overrides = "^3.0"
+greenlet = "<1"
+torch = "^1.13"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6"
