@@ -70,8 +70,6 @@ plt.errorbar(list(range(1, seq_len+1)),
 
 ```
 
-For more examples of how to use the sequence-based approach, see [example_minimal.ipynb](https://github.com/labstructbioinf/rossmann-toolbox/blob/main/examples/example_minimal.ipynb).
-
 ## Structure-based approach
 Structure-based predictions are not currently available. We are working on a new version that will not only provide predictions, but also the ability to make specificity-shifting mutations.
 
