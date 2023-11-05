@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rossmann-toolbox"
-version = "0.1.0"
+version = "0.1.1"
 description = "Prediction and re-engineering of the cofactor specificity of Rossmann-fold proteins"
 authors = ["Kamil Kaminski <k.kaminski@cent.uw.edu.pl>", "Jan Ludwiczak <j.ludwiczak@cent.uw.edu.pl>", "Stanislaw Dunin-Horkawicz <s.dunin-horkawicz@cent.uw.edu.pl>"]
 readme = "README.md"
