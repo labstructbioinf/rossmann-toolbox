@@ -17,6 +17,18 @@ The Rossmann Toolbox provides two deep learning models for predicting the cofact
 
 # Installation
 
+Create a conda environment:
+```bash
+conda create --name rtb python=3.7
+conda activate rtb
+```
+
+Install pip in the environment:
+```bash
+conda install pip
+```
+
+Install from PyPI:
 ```
 pip install rossmann-toolbox
 ```
