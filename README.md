@@ -17,20 +17,13 @@ The Rossmann Toolbox provides two deep learning models for predicting the cofact
 
 # Installation
 
-Create a conda environment:
-```bash
-conda create --name rtb python=3.6.2
-conda activate rtb
+```
+pip install rossmann-toolbox
 ```
 
-Install pip in the environment:
-```bash
-conda install pip
+Alternatively, to get the most recent changes, install directly from the repository:
 ```
-
-Install rtb using `requirements.txt`:
-```bash
-pip install -r requirements.txt
+pip install git+https://github.com/labstructbioinf/rossmann-toolbox.git
 ```
 
 # Usage
