@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rossmann-toolbox"
-version = "0.1.0"
+version = "0.1.1"
 description = "Prediction and re-engineering of the cofactor specificity of Rossmann-fold proteins"
 authors = ["Kamil Kaminski <k.kaminski@cent.uw.edu.pl>", "Jan Ludwiczak <j.ludwiczak@cent.uw.edu.pl>", "Stanislaw Dunin-Horkawicz <s.dunin-horkawicz@cent.uw.edu.pl>"]
 readme = "README.md"
@@ -10,7 +10,7 @@ classifiers = ["Topic :: Scientific/Engineering :: Bio-Informatics", "License ::
                "Programming Language :: Python :: 3 :: Only", "Topic :: Scientific/Engineering :: Artificial Intelligence"]
 
 [tool.poetry.dependencies]
-python = "^3.6.1"
+python = "^3.7"
 aiohttp = "^3.7.4"
 atomium = "1.0.9"
 biopython = "1.78"
@@ -21,6 +21,8 @@ pandas = "1.1.5"
 csb = "^1.2.5"
 seqvec = "0.4.1"
 overrides = "^3.0"
+greenlet = "<1"
+torch = "^1.13"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6"
